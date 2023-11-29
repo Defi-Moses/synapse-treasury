@@ -16,7 +16,7 @@ chains = {
     'dogechain': {'url': os.getenv('DOGECHAIN_RPC'), 'bridge': '0x9508BF380c1e6f751D97604732eF1Bae6673f299', 'multisig': '0x8f17b483982d1cc09296aed8f1b09ad830358a8d'},
     'ethereum': {'url': os.getenv('ETHEREUM_RPC'), 'bridge': '0x2796317b0fF8538F253012862c06787Adfb8cEb6', 'multisig': '0x67F60b0891EBD842Ebe55E4CCcA1098d7Aac1A55'},
     'fantom': {'url': os.getenv('FANTOM_RPC'), 'bridge': '0xAf41a65F786339e7911F4acDAD6BD49426F2Dc6b', 'multisig': '0x224002428cF0BA45590e0022DF4b06653058F22F'},
-    # 'harmony': {'url': os.getenv('HARMONY_RPC'), 'bridge': '0xAf41a65F786339e7911F4acDAD6BD49426F2Dc6b', 'multisig': '0x0172e7190Bbc0C2Aa98E4d1281d41D0c07178605'},
+    'harmony': {'url': os.getenv('HARMONY_RPC'), 'bridge': '0xAf41a65F786339e7911F4acDAD6BD49426F2Dc6b', 'multisig': '0x0172e7190Bbc0C2Aa98E4d1281d41D0c07178605'},
     # 'klaytn': {'url': os.getenv('KLAYTN_RPC'), 'bridge': '0xAf41a65F786339e7911F4acDAD6BD49426F2Dc6b', 'multisig': '0x8f17B483982d1CC09296Aed8F1b09Ad830358A8D'},
     'metis': {'url': os.getenv('METIS_RPC'), 'bridge': '0x06Fea8513FF03a0d3f61324da709D4cf06F42A5c', 'multisig': '0xEAEC50eBe1c2A981ED8be02C36b0863Fae322975'},
     'moonriver': {'url': os.getenv('MOONRIVER_RPC'), 'bridge': '0xaeD5b25BE1c3163c907a471082640450F928DDFE', 'multisig': '0x4bA30618fDcb184eC01a9B3CAe258CFc5786E70E'},
@@ -290,12 +290,8 @@ tokens_by_chain = {
     ],
 
     'harmony': [
-        # Rugged Chain (Only ONE left on the chain)
-        # ("MOVR","0x98878B06940aE243284CA214F92Bb71a2B032B8A", 18),
-        # ("USDC","0xE3F5a90F9cb311505cd691a46596599aA1A0AD7D", 6),
-        # ("SOLAR","0x76906411D07815491A5E577022757aD941fb5066", 18),
-        # ("WETH","0xF6A4ACDf423586E4ac54cbf3D1F94BF6688e6E10", 18),
-        # ("H2O", "0x9c0a820bb01e2807aCcd1c682d359e92DDd41403", 18),
-        # ("SYNFRAX", "0xE96AC70907ffF3Efee79f502C985A7A21Bce407d", 18),      
+        # Rugged Chain (Only ONE left on the chain)     
+        ("NUSD", "0xed2a7edd7413021d440b09d654f3b87712abab66", 18), 
+        ("NETH", "0x0b5740c6b4a97f90eF2F0220651Cca420B868FfB", 18), 
     ]
 }
