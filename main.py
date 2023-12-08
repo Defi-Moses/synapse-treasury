@@ -1,92 +1,66 @@
 import json
 import requests
 import csv
-from config.config import chains, tokens_by_chain
+import hashlib
+import sys
+from web3 import Web3
+from helpers import make_rpc_call, get_token_decimals, encode_uint256, get_token_symbol
 from config.timeData import times, month_timestamps
+from config.config import arbitrum, aurora, avax, base, boba, bsc, canto, cronos, dfk, dogechain, ethereum, fantom, harmony, metis, moonbeam, moonriver, optimism, polygon, klaytn
 
 
-def make_rpc_request(url, method, params=None):
-    print(f"Making RPC request to: {url} with method: {method} and params: {params}")
-    payload = {
-        "jsonrpc": "2.0",
-        "method": method,
-        "params": params or [],
-        "id": 1
-    }
+chains = [arbitrum, aurora, avax, base, boba, bsc, canto, cronos, dfk, dogechain, ethereum, fantom, harmony, metis, moonbeam, moonriver, optimism, polygon, klaytn]
 
-    response = requests.post(url, json=payload)
-    print("Response status code:", response.status_code)
-    print("Response text:", response.text)
-
-    if response.status_code == 200:
-        return response.json()
+# Getting the balance of whats claimed in the multisig
+def get_balance(chain, contract_address, decimals, blocknumber="latest"):
+    data = "0x70a08231" + chain.multisig[2:].zfill(64)
+    balance_hex = make_rpc_call(chain, contract_address, data, "latest")
+    if balance_hex == '0x' or balance_hex == 0:
+        balance = 0
     else:
-        raise Exception(f"RPC request failed with status code: {response.status_code}")
+        balance = int(balance_hex, 16)
+    return balance / (10 ** decimals)
 
+# Getting the balance of whats unclaimed in bridge contracts. 
+def get_fee_balance(chain, contract_address, decimals, blocknumber="latest"):
+    data = "0xc78f6803" + contract_address[2:].zfill(64)
+    balance_hex = make_rpc_call(chain, chain.bridge_address, data, "latest")
+    if balance_hex == '0x' or balance_hex == 0:
+        balance = 0
+    else:
+        balance = int(balance_hex, 16)
+    return (balance / 10 ** decimals)
+
+# Getting the balance of whats unclaimed in swap contracts
+def get_swap_fee_balance(chain, pool, index, blocknumber="latest"):
+    # Get the entire function hash, and then truncate it to get the function hash
+    admin_function_selector = Web3.keccak(text='getAdminBalance(uint256)').hex()[0:10]
+    token_function_selector = Web3.keccak(text='getToken(uint8)').hex()[0:10]
+
+    #Setup the data
+    get_token_amount = admin_function_selector + encode_uint256(index)
+    get_token_address = token_function_selector + encode_uint256(index)
+
+    # Make an RPC call to get the token Amount (Nominal)
+    amount = int(make_rpc_call(chain, pool,  get_token_amount, blocknumber),16)
+    # Make an RPC call to get the token Address (hex string)
+    address = "0x" + make_rpc_call(chain, pool, get_token_address, blocknumber)[-40:]
+
+    # Get the proper amount of token decimals
+    amount = amount/ 10**get_token_decimals(chain, address)
+    token_symbol = get_token_symbol(chain, address)
+
+    # Use this to get the proper balance
+    balance = get_defillama_price(chain.name, address) * amount
     
-def get_balance(chain_name, msig_address, token_address, decimals, blocknumber = "latest"):
-    # Get the RPC URL from the chains dictionary
-    url = chains[chain_name]['url']
+    # print(f"\n The token {token_symbol} at index {index} has \n amount: {amount} \n balance: {balance} \n \n ")
+    return token_symbol, balance
 
-    if blocknumber != "latest" and blocknumber != None:
-        blocknumber =hex(blocknumber)
-    # Define the method and params
-    data = "0x70a08231" + msig_address[2:].zfill(64)
-    method = "eth_call"
-    params = [{
-        "to": token_address,
-        "data": data  # balanceOf method signature + address without '0x'
-    }, "latest"]
+def get_cctp_balance(chain, cctp_address, blocknumber="latest"):
+    #to do... blocked rn because I cant figure out the correct function parameters to pass in
+    # 1. make RPC request to get the fee balance 2. Call defillama for any USDC address return balance and symbol "USDC". then add logic to cleanly add to lists below
+    return
 
-    try:
-        # Make the RPC request
-        response = make_rpc_request(url, method, params)
-
-        # Extract the balance from the response
-        balance_hex = response["result"]  # balance in hex
-        if balance_hex == '0x':
-            balance = 0
-        else:
-            balance = int(balance_hex, 16)  # convert from hex to decimal
-        # Adjust for token decimals
-        balance /= 10 ** decimals
-
-    except Exception as e:
-        balance = 0
-
-    return balance
-
-def get_fee_balance(chain_name, bridge_address, token_address, decimals, blocknumber = "latest"):
-    # Get the RPC URL from the chains dictionary
-    url = chains[chain_name]['url']
-    if blocknumber != "latest" and blocknumber != None:
-        blocknumber =hex(blocknumber)
-    # Define the method and params
-    # Function signature hash for getFeeBalance(address) is "0xc78f6803"
-    data = "0xc78f6803" + token_address[2:].zfill(64)
-    method = "eth_call"
-    params = [{
-        "to": bridge_address,
-        "data": data
-    }, "latest"]
-
-    try:
-        # Make the RPC request
-        response = make_rpc_request(url, method, params)
-
-        # Extract the balance from the response
-        balance_hex = response["result"]  # balance in hex
-        if balance_hex == '0x':
-            balance = 0
-        else:
-            balance = int(balance_hex, 16)  # convert from hex to decimal
-        # Adjust for token decimals
-        balance /= 10 ** decimals
-
-    except Exception as e:
-        balance = 0
-
-    return balance
 
 def get_defillama_price(chain_name, token_address, timestamp = None):
     if timestamp == None:
@@ -121,50 +95,64 @@ def get_token_balances_and_values(timestamp = None, month = "Current", specific_
     with open(f'treasuryHoldings_{month}_2023.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         # Write the headers
-        writer.writerow(["Chain", "Token Symbol", "Value", "Type"])
+        writer.writerow(["Chain", "Token Symbol", "Value", "Type", "Contract Address"])
 
         # 1. Iterate over each chain in the chains dictionary
-        for chain_name, chain_data in chains.items():
+        for chain in chains:
             # Initialize the sums for this chain
-            sums[chain_name] = {"Claimed Fees": 0, "Unclaimed Fees": 0}
+            sums[chain.name] = {"Claimed Fees": 0, "Unclaimed Fees": 0, "Swap Unclaimed Fees": 0, "CCTP Unclaimed Fees":0}
 
             # 2. For each chain, iterate over the tokens supported by that chain
-            for token in tokens_by_chain.get(chain_name, []):
-                if specific_chain and chain_name != specific_chain:
+            for token in chain.tokens:
+                if specific_chain and chain.name != specific_chain:
                     continue
                 if month == "Current": 
                     block = None
                 else: 
-                    block = times[chain_name][month-1]
+                    block = times[chain.name][month-1]
                 # 3. Call the getBalance method on the multisig contract for each token
-                balance = get_balance(chain_name, chain_data['multisig'], token[1], token[2], block )
+                balance = get_balance(chain, token[1], token[2], block )
                 # Call the getFeeBalance method on the bridge contract for each token
-                fee_balance = get_fee_balance(chain_name, chain_data['bridge'], token[1], token[2], block)
+                fee_balance = get_fee_balance(chain, token[1], token[2], block)
                 # 4. Call the DeFiLlama API to get the price of the token
                 if timestamp == None:
-                    price = get_defillama_price(chain_name, token[1])
+                    price = get_defillama_price(chain.name, token[1])
                 else: 
-                    price = get_defillama_price(chain_name, token[1], timestamp)
+                    price = get_defillama_price(chain.name, token[1], timestamp)
                 # 5. Multiply the balance by the price to get the value
                 claimed_value = balance * price
                 unclaimed_value = fee_balance * price
 
                 # Add the values to the sums
-                sums[chain_name]["Claimed Fees"] += claimed_value
-                sums[chain_name]["Unclaimed Fees"] += unclaimed_value
+                sums[chain.name]["Claimed Fees"] += claimed_value
+                sums[chain.name]["Unclaimed Fees"] += unclaimed_value
 
                 # 6. Store the chain, token address, token symbol, balance, and value
-                writer.writerow([chain_name, token[0], claimed_value, "Claimed Fees"])
-                writer.writerow([chain_name, token[0], unclaimed_value, "Unclaimed Fees"])
+                writer.writerow([chain.name, token[0], claimed_value, "Claimed Fees", chain.multisig])
+                writer.writerow([chain.name, token[0], unclaimed_value, "Unclaimed Fees", chain.bridge_address])
+            # Finish figuring out amount in each pool
+            for pool in chain.swap_addresses:
+                i = 0
+                swap_unclaimed_value = 0
+                while True: 
+                    try:
+                        symbol, token_value = get_swap_fee_balance(chain, pool, i)
+                        swap_unclaimed_value += token_value
+                        sums[chain.name]["Swap Unclaimed Fees"] += token_value
+                        writer.writerow([chain.name, symbol, token_value, "Swap Unclaimed Fees", pool])
+                        i +=1
+                    except Exception as e: 
+                        print(f"Exception occured: {e}")
+                        break   
 
     # Write the sums to a new CSV file
     with open(f'treasurySums_{month}_2023.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         # Write the headers
-        writer.writerow(["Chain", "Claimed Fees", "Unclaimed Fees"])
+        writer.writerow(["Chain", "Claimed Fees", "Unclaimed Fees", "Swap Unclaimed Fees", "CCTP Unclaimed Fees"])
         # Write the sums
-        for chain_name, values in sums.items():
-            writer.writerow([chain_name, values["Claimed Fees"], values["Unclaimed Fees"]])
+        for chain.name, values in sums.items():
+            writer.writerow([chain.name, values["Claimed Fees"], values["Unclaimed Fees"], values["Swap Unclaimed Fees"], values["CCTP Unclaimed Fees"]])
 
 
 
