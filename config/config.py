@@ -48,7 +48,7 @@ arbitrum = Chain(
         ("SYN", "0x080f6aed32fc474dd5717105dba5ea57268f46eb", 18),
         ("NUSD", "0x2913E812Cf0dcCA30FB28E6Cac3d2DCFF4497688", 18),
     ],
-    cctp= '0xfb2bfc368a7edfd51aa2cbec513ad50edea74e84'
+    cctp= ['0xfb2bfc368a7edfd51aa2cbec513ad50edea74e84','0x12715a66773BD9C54534a01aBF01d05F6B4Bd35E']
 )
 
 
@@ -102,7 +102,7 @@ avax = Chain(
         # ("NEWO", "0x4Bfc90322dD638F81F034517359BD447f8E0235a", 18),
         # ("H20", "0xC6b11a4Fd833d1117E9D312c02865647cd961107", 18),
     ],
-    cctp='0xfB2Bfc368a7edfD51aa2cbEC513ad50edEa74E84'
+    cctp=['0xfB2Bfc368a7edfD51aa2cbEC513ad50edEa74E84','0x12715a66773BD9C54534a01aBF01d05F6B4Bd35E']
 )
 
 base = Chain(
@@ -420,7 +420,7 @@ optimism = Chain(
         ("SUSD", "0x8c6f28f2F1A3C87F0f938b96d27520d9751ec8d9", 18),
         ("WETH", "0x121ab82b49B2BC4c7901CA46B8277962b4350204", 18),
     ],
-    cctp='0x5e69c336661dde70404e3345ba61f9c01ddb4c36'
+    cctp=['0x5e69c336661dde70404e3345ba61f9c01ddb4c36','0x12715a66773BD9C54534a01aBF01d05F6B4Bd35E']
 )
 
 polygon = Chain(
@@ -447,7 +447,7 @@ polygon = Chain(
         ("GOHM", "0xd8cA34fd379d9ca3C6Ee3b3905678320F5b45195", 18),
         ("NUSD", "0xb6c473756050de474286bed418b77aeac39b02af", 18),
     ],
-    cctp=''
+    cctp=['0x12715a66773BD9C54534a01aBF01d05F6B4Bd35E']
 )
 
 klaytn = Chain(

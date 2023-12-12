@@ -161,10 +161,10 @@ def get_token_balances_and_values(timestamp = None, month = "Current", specific_
                         print(f"Exception occured: {e}")
                         break   
             # Find and add CCTP addresses
-            if chain.cctp:
+            for address in chain.cctp:
                 cctp_fees = get_cctp_balance(chain)
-                sums[chain.name]["CCTP Unclaimed Fees"] = cctp_fees
-                writer.writerow([chain.name,"USDC", cctp_fees, "CCTP Unclaimed Fees", chain.cctp])
+                sums[chain.name]["CCTP Unclaimed Fees"] += cctp_fees
+                writer.writerow([chain.name,"USDC", cctp_fees, "CCTP Unclaimed Fees", address])
             
 
     # Write the sums to a new CSV file
