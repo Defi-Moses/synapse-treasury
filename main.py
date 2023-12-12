@@ -56,10 +56,24 @@ def get_swap_fee_balance(chain, pool, index, blocknumber="latest"):
     # print(f"\n The token {token_symbol} at index {index} has \n amount: {amount} \n balance: {balance} \n \n ")
     return token_symbol, balance
 
-def get_cctp_balance(chain, cctp_address, blocknumber="latest"):
-    #to do... blocked rn because I cant figure out the correct function parameters to pass in
-    # 1. make RPC request to get the fee balance 2. Call defillama for any USDC address return balance and symbol "USDC". then add logic to cleanly add to lists below
-    return
+def get_cctp_balance(chain, blocknumber="latest"):
+    fees_function_selector = Web3.keccak(text='accumulatedFees(address,address)').hex()[0:10]
+
+    if chain.cctp:
+        usdc_address = next((token[1] for token in chain.tokens if token[0] == "USDC"), None)
+        print("hi")
+        if usdc_address:
+            print("inside the for loop")
+            usdc_address = usdc_address[2:].zfill(64)
+            protocol_fees = '0x0000000000000000000000000000000000000000'[2:].zfill(64)
+            get_cctp_fees = fees_function_selector + protocol_fees + usdc_address
+            amount = int(make_rpc_call(chain, chain.cctp, get_cctp_fees, blocknumber),16) / 10**6
+            return amount
+    else:
+        amount = 0
+        return amount
+
+    return amount
 
 
 def get_defillama_price(chain_name, token_address, timestamp = None):
@@ -101,6 +115,8 @@ def get_token_balances_and_values(timestamp = None, month = "Current", specific_
         for chain in chains:
             # Initialize the sums for this chain
             sums[chain.name] = {"Claimed Fees": 0, "Unclaimed Fees": 0, "Swap Unclaimed Fees": 0, "CCTP Unclaimed Fees":0}
+            
+
 
             # 2. For each chain, iterate over the tokens supported by that chain
             for token in chain.tokens:
@@ -144,6 +160,12 @@ def get_token_balances_and_values(timestamp = None, month = "Current", specific_
                     except Exception as e: 
                         print(f"Exception occured: {e}")
                         break   
+            # Find and add CCTP addresses
+            if chain.cctp:
+                cctp_fees = get_cctp_balance(chain)
+                sums[chain.name]["CCTP Unclaimed Fees"] = cctp_fees
+                writer.writerow([chain.name,"USDC", cctp_fees, "CCTP Unclaimed Fees", chain.cctp])
+            
 
     # Write the sums to a new CSV file
     with open(f'treasurySums_{month}_2023.csv', 'w', newline='') as file:

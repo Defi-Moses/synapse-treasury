@@ -19,7 +19,9 @@ The file structure is as follows:
 ```
 project/
 │
-├── main.py  
+├── main.py 
+├──helpers.py
+│ 
 └── config/
     └── config.py
     └── timeData.py
@@ -38,12 +40,17 @@ project/
 
 # Methodology:
 
-To aggregate all Synapse Treasury Holdings, two primary sets of contracts need to be tracked.
+To aggregate all Synapse Treasury Holdings, four sets of contracts need to be tracked.
 <br>
 <br>
 `claimed-fees`: Assets currently held in Synapse Treasury Wallets
 <br>
 `unclaimed-fees`: Fees that the protocol has accrued but hasnt been claimed from bridge contracts
+<br>
+<br>
+`unclaimed-cctp-fees`:  Fees that the protocol has accrued but hasnt been claimed from cctp bridge contracts
+<br>
+`unclaimed-swap-fees`: Fees that the protocol has accrued but hasnt been claimed from swap contracts
 <br>
 
 Claimed fees can be tracked by directly getting the balance of all tokens the Treasury Wallet holds using RPC requests. Once this raw balance is returned we correct for decimals and multiply by the price at that timestamp as returned by Defillama's price API
@@ -59,12 +66,36 @@ All relevant contracts are open source and can be found in the [Synapse Main Rep
 <br>
 <br>
 
+# Contributing:
+
+This is an open source repository currently maintained by Synapse community members. Here are some example ways of contribution: 
+<br>
+
+### Adding a Chain:
+Files needed to update:
+1. `config.py`: Create a new instance of the "chain" class and add all relevant contract addresses
+2. `.env`: Add a reliable RPC to your .env file
+3. `timestamps.py`: If you plan on backfilling data, add historical blocknumbers for the beginning of each month
+
+### Adding a new token:
+Files needed to update:
+1. `config.py`: Update the relevant chain instance with its new token, token address, and decimals in the "tokens" field
+
+### Adding a new contract:
+Files needed to update:
+1. `config.py`: Update the relevant chain instance with its new contract according to type (cctp, swap, bridge)
+2. `main.py`: If the contract is a new "type" then you will need to create a new method to return the unclaimed fees, youll also have to add that neatly into get_token_balances_and_values()
+
+
+
+
+
+
+
 Updates to come:
-- Current Data fetch is currently buggy
+- Code clean up
 - Possibly a fetch method to get the latest cached data (?)
-- Code Clean up 
 - Better testing / Testing suite
-- Turn into a cli for better usability
 
 Notes: 
 - Relies on the Defillama pricing API for all prices
