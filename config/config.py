@@ -93,6 +93,7 @@ avax = Chain(
         ("NUSD", "0xcfc37a6ab183dd4aed08c204d1c2773c0b1bdf46", 18),
         ("USDC", "0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e", 6),
         ("USDT", "0x9702230a8ea53601f5cd2dc00fdbc13d4df4a8c7", 6),
+        ("JEWEL", "0x997Ddaa07d716995DE90577C123Db411584E5E46", 18),
         ("JEWEL", "0x4f60a160D8C2DDdaAfe16FCC57566dB84D674BD6", 18),
         ("BTCB", "0x152b9d0FdC40C096757F570A51E494bd4b943E50", 18),
         ("AVWETH", "0x53f7c5869a859f0aec3d334ee8b4cf01e3492f21", 18),
