@@ -60,10 +60,6 @@ Unclaimed fees are similar in that we can make an RPC call to the bridge, and re
 In the data folder, the script with the logic above is run and returned two types of summaries for each month. A "Sum" and a "Breakdown" - which is a more nuanced sum and tracks individual token balances.
 
 All relevant contracts are open source and can be found in the [Synapse Main Repository](https://github.com/synapsecns/synapse-contracts) repository, as well as the [config](https://github.com/Defi-Moses/synapse-treasury/blob/main/config/config.py).
-
-<br>
-**IMPORTANT:** The current implementation doesnt track unclaimed assets in the Synapse Swap pools. This version is also missing Base Chain fees. 
-<br>
 <br>
 
 # Contributing:
