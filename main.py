@@ -9,12 +9,13 @@ from config.timeData import times, month_timestamps
 from config.config import arbitrum, aurora, avax, base, boba, bsc, canto, cronos, dfk, dogechain, ethereum, fantom, harmony, metis, moonbeam, moonriver, optimism, polygon, klaytn
 
 
-chains = [arbitrum, aurora, avax, base, boba, bsc, canto, cronos, dfk, dogechain, ethereum, fantom, harmony, metis, moonbeam, moonriver, optimism, polygon, klaytn]
+# chains = [arbitrum, aurora, avax, base, boba, bsc, canto, cronos, dfk, dogechain, ethereum, fantom, harmony, metis, moonbeam, moonriver, optimism, polygon, klaytn]
+chains = [arbitrum]
 
 # Getting the balance of whats claimed in the multisig
 def get_balance(chain, contract_address, decimals, blocknumber="latest"):
     data = "0x70a08231" + chain.multisig[2:].zfill(64)
-    balance_hex = make_rpc_call(chain, contract_address, data, "latest")
+    balance_hex = make_rpc_call(chain, contract_address, data, blocknumber)
     if balance_hex == '0x' or balance_hex == 0:
         balance = 0
     else:
@@ -24,7 +25,7 @@ def get_balance(chain, contract_address, decimals, blocknumber="latest"):
 # Getting the balance of whats unclaimed in bridge contracts. 
 def get_fee_balance(chain, contract_address, decimals, blocknumber="latest"):
     data = "0xc78f6803" + contract_address[2:].zfill(64)
-    balance_hex = make_rpc_call(chain, chain.bridge_address, data, "latest")
+    balance_hex = make_rpc_call(chain, chain.bridge_address, data, blocknumber)
     if balance_hex == '0x' or balance_hex == 0:
         balance = 0
     else:
@@ -61,9 +62,7 @@ def get_cctp_balance(chain, blocknumber="latest"):
 
     if chain.cctp:
         usdc_address = next((token[1] for token in chain.tokens if token[0] == "USDC"), None)
-        print("hi")
         if usdc_address:
-            print("inside the for loop")
             usdc_address = usdc_address[2:].zfill(64)
             protocol_fees = '0x0000000000000000000000000000000000000000'[2:].zfill(64)
             get_cctp_fees = fees_function_selector + protocol_fees + usdc_address
@@ -115,17 +114,19 @@ def get_token_balances_and_values(timestamp = None, month = "Current", specific_
         for chain in chains:
             # Initialize the sums for this chain
             sums[chain.name] = {"Claimed Fees": 0, "Unclaimed Fees": 0, "Swap Unclaimed Fees": 0, "CCTP Unclaimed Fees":0}
-            
+
+
+            if specific_chain and chain.name != specific_chain:
+                continue
+            if month == "Current": 
+                block = None
+            else: 
+                block = times[chain.name][month-1]
 
 
             # 2. For each chain, iterate over the tokens supported by that chain
             for token in chain.tokens:
-                if specific_chain and chain.name != specific_chain:
-                    continue
-                if month == "Current": 
-                    block = None
-                else: 
-                    block = times[chain.name][month-1]
+
                 # 3. Call the getBalance method on the multisig contract for each token
                 balance = get_balance(chain, token[1], token[2], block )
                 # Call the getFeeBalance method on the bridge contract for each token
@@ -152,7 +153,7 @@ def get_token_balances_and_values(timestamp = None, month = "Current", specific_
                 swap_unclaimed_value = 0
                 while True: 
                     try:
-                        symbol, token_value = get_swap_fee_balance(chain, pool, i)
+                        symbol, token_value = get_swap_fee_balance(chain, pool, i, block)
                         swap_unclaimed_value += token_value
                         sums[chain.name]["Swap Unclaimed Fees"] += token_value
                         writer.writerow([chain.name, symbol, token_value, "Swap Unclaimed Fees", pool])
@@ -162,7 +163,7 @@ def get_token_balances_and_values(timestamp = None, month = "Current", specific_
                         break   
             # Find and add CCTP addresses
             for address in chain.cctp:
-                cctp_fees = get_cctp_balance(chain)
+                cctp_fees = get_cctp_balance(chain, block)
                 sums[chain.name]["CCTP Unclaimed Fees"] += cctp_fees
                 writer.writerow([chain.name,"USDC", cctp_fees, "CCTP Unclaimed Fees", address])
             
@@ -192,5 +193,5 @@ def get_current_balances():
     get_token_balances_and_values()
 
 if __name__ == "__main__":
-    get_current_balances()
-    # backfill_treasury_balances()
+    # get_current_balances()
+    backfill_treasury_balances()
