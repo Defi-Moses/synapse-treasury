@@ -9,8 +9,8 @@ from config.timeData import times, month_timestamps
 from config.config import arbitrum, aurora, avax, base, boba, bsc, canto, cronos, dfk, dogechain, ethereum, fantom, harmony, metis, moonbeam, moonriver, optimism, polygon, klaytn
 
 
-# chains = [arbitrum, aurora, avax, base, boba, bsc, canto, cronos, dfk, dogechain, ethereum, fantom, harmony, metis, moonbeam, moonriver, optimism, polygon, klaytn]
-chains = [arbitrum]
+chains = [arbitrum, aurora, avax, base, boba, bsc, canto, cronos, dfk, dogechain, ethereum, fantom, harmony, metis, moonbeam, moonriver, optimism, polygon, klaytn]
+# chains = [polygon]
 
 # Getting the balance of whats claimed in the multisig
 def get_balance(chain, contract_address, decimals, blocknumber="latest"):
@@ -43,7 +43,10 @@ def get_swap_fee_balance(chain, pool, index, blocknumber="latest"):
     get_token_address = token_function_selector + encode_uint256(index)
 
     # Make an RPC call to get the token Amount (Nominal)
-    amount = int(make_rpc_call(chain, pool,  get_token_amount, blocknumber),16)
+    result = make_rpc_call(chain, pool,  get_token_amount, blocknumber)
+    if not isinstance(result, str):
+        result = str(result)
+    amount = int(result,16)
     # Make an RPC call to get the token Address (hex string)
     address = "0x" + make_rpc_call(chain, pool, get_token_address, blocknumber)[-40:]
 
@@ -59,18 +62,18 @@ def get_swap_fee_balance(chain, pool, index, blocknumber="latest"):
 
 def get_cctp_balance(chain, blocknumber="latest"):
     fees_function_selector = Web3.keccak(text='accumulatedFees(address,address)').hex()[0:10]
-
+    amount = 0
     if chain.cctp:
         usdc_address = next((token[1] for token in chain.tokens if token[0] == "USDC"), None)
         if usdc_address:
             usdc_address = usdc_address[2:].zfill(64)
             protocol_fees = '0x0000000000000000000000000000000000000000'[2:].zfill(64)
             get_cctp_fees = fees_function_selector + protocol_fees + usdc_address
-            amount = int(make_rpc_call(chain, chain.cctp, get_cctp_fees, blocknumber),16) / 10**6
+            result = make_rpc_call(chain, chain.cctp, get_cctp_fees, blocknumber)
+            if not isinstance(result, str):
+                result = str(result)
+            amount = int(result, 16) / 10**6
             return amount
-    else:
-        amount = 0
-        return amount
 
     return amount
 
@@ -119,7 +122,7 @@ def get_token_balances_and_values(timestamp = None, month = "Current", specific_
             if specific_chain and chain.name != specific_chain:
                 continue
             if month == "Current": 
-                block = None
+                block = "latest"
             else: 
                 block = times[chain.name][month-1]
 
@@ -173,9 +176,10 @@ def get_token_balances_and_values(timestamp = None, month = "Current", specific_
         writer = csv.writer(file)
         # Write the headers
         writer.writerow(["Chain", "Claimed Fees", "Unclaimed Fees", "Swap Unclaimed Fees", "CCTP Unclaimed Fees"])
+        # print(f'\n \n \n \n \n \n Hello, here is {sums} \n \n \n \n \n \n')
         # Write the sums
-        for chain.name, values in sums.items():
-            writer.writerow([chain.name, values["Claimed Fees"], values["Unclaimed Fees"], values["Swap Unclaimed Fees"], values["CCTP Unclaimed Fees"]])
+        for chain_name, values in sums.items():
+            writer.writerow([chain_name, values["Claimed Fees"], values["Unclaimed Fees"], values["Swap Unclaimed Fees"], values["CCTP Unclaimed Fees"]])
 
 
 
@@ -193,5 +197,5 @@ def get_current_balances():
     get_token_balances_and_values()
 
 if __name__ == "__main__":
-    # get_current_balances()
-    backfill_treasury_balances()
+    get_current_balances()
+    # backfill_treasury_balances()
