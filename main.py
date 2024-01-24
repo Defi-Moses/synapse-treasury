@@ -7,19 +7,35 @@ from web3 import Web3
 from helpers import make_rpc_call, get_token_decimals, encode_uint256, get_token_symbol
 from config.timeData import times, month_timestamps
 from config.config import arbitrum, aurora, avax, base, boba, bsc, canto, cronos, dfk, dogechain, ethereum, fantom, harmony, metis, moonbeam, moonriver, optimism, polygon, klaytn
+from datetime import datetime
 
+current_datetime = datetime.now()
 
-chains = [arbitrum, aurora, avax, base, boba, bsc, canto, cronos, dfk, dogechain, ethereum, fantom, harmony, metis, moonbeam, moonriver, optimism, polygon, klaytn]
-# chains = [polygon]
+current_month = current_datetime.month
 
+month_names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+current_month_name = month_names[current_month - 1]
+
+# Print the current month
+print("Current Month (number):", current_month)
+print("Current Month (name):", current_month_name)
+
+print(month_timestamps)
+print(len(month_timestamps))
+chains = [klaytn]
+    #arbitrum, aurora, avax, base, boba, bsc, canto, cronos, dfk, dogechain, ethereum, fantom, harmony, metis, moonbeam, moonriver, optimism, polygon, klaytn]
 # Getting the balance of whats claimed in the multisig
 def get_balance(chain, contract_address, decimals, blocknumber="latest"):
+    #print(f"Entering get_balance. Chain: {chain.name}, Contract Address: {contract_address}, Decimals: {decimals}, Blocknumber: {blocknumber}")
+    print(f" Blocknumber: {blocknumber}")
     data = "0x70a08231" + chain.multisig[2:].zfill(64)
     balance_hex = make_rpc_call(chain, contract_address, data, blocknumber)
+    print(f"Balance hex: {balance_hex}")
     if balance_hex == '0x' or balance_hex == 0:
         balance = 0
     else:
         balance = int(balance_hex, 16)
+    print(f"Exiting get_balance. Balance: {balance}")
     return balance / (10 ** decimals)
 
 # Getting the balance of whats unclaimed in bridge contracts. 
@@ -34,6 +50,9 @@ def get_fee_balance(chain, contract_address, decimals, blocknumber="latest"):
 
 # Getting the balance of whats unclaimed in swap contracts
 def get_swap_fee_balance(chain, pool, index, blocknumber="latest"):
+    #print(f"Entering get_swap_fee_balance. Chain: {chain.name}, Pool: {pool}, Index: {index}, Blocknumber: {blocknumber}")
+    print(f"Blocknumber: {blocknumber}")
+
     # Get the entire function hash, and then truncate it to get the function hash
     admin_function_selector = Web3.keccak(text='getAdminBalance(uint256)').hex()[0:10]
     token_function_selector = Web3.keccak(text='getToken(uint8)').hex()[0:10]
@@ -58,6 +77,7 @@ def get_swap_fee_balance(chain, pool, index, blocknumber="latest"):
     balance = get_defillama_price(chain.name, address) * amount
     
     # print(f"\n The token {token_symbol} at index {index} has \n amount: {amount} \n balance: {balance} \n \n ")
+    #print(f"Exiting get_swap_fee_balance. Token Symbol: {token_symbol}, Balance: {balance}")
     return token_symbol, balance
 
 def get_cctp_balance(chain, blocknumber="latest"):
@@ -92,6 +112,8 @@ def get_defillama_price(chain_name, token_address, timestamp = None):
 
         # Check the status code
         if response.status_code == 200:
+            #print("Response status code:", response.status_code)
+            #print("Response text:", response.text)
             # Parse the JSON response
             data = response.json()
             # Extract the price
@@ -185,11 +207,20 @@ def get_token_balances_and_values(timestamp = None, month = "Current", specific_
 
 # Call this to redo the backfill
 def backfill_treasury_balances():
-    month = 1
-    for time in month_timestamps:
-        # Can specify a specific_chain value to restrict the program to only those chains.
-        get_token_balances_and_values(time, month)
-        month += 1
+    """
+    Backfills treasury balances for the available months in the month_timestamps list.
+    """
+    # Get the current year's available months based on the length of month_timestamps
+    available_months = len(month_timestamps)
+
+    for month_index in range(available_months):
+        time = month_timestamps[month_index]
+        month = month_index + 1  # Adjusting month number (since index starts at 0)
+        try:
+            print(f"Backfilling for month {month} with timestamp {time}")
+            get_token_balances_and_values(time, month)
+        except Exception as e:
+            print(f"Error occurred during backfilling for month {month}: {e}")
 
 # Call this to get the current balances 
 def get_current_balances():
@@ -197,5 +228,5 @@ def get_current_balances():
     get_token_balances_and_values()
 
 if __name__ == "__main__":
-    get_current_balances()
-    # backfill_treasury_balances()
+    #get_current_balances()
+    backfill_treasury_balances()

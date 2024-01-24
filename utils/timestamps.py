@@ -42,7 +42,7 @@ for chain in chains:
     # Loop over the months in the specified range
     for year in range(start_year, end_year):
         # NOTE this loop only stores information for the first 10 months. 
-        for month in range(1, 10):
+        for month in range(1, 12):
             # Get the first day of the month
             first_day = datetime.date(year, month, 1)
 
