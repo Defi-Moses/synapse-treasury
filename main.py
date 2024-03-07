@@ -10,7 +10,7 @@ from config.config import arbitrum, aurora, avax, base, boba, bsc, canto, cronos
 
 
 chains = [arbitrum, aurora, avax, base, boba, bsc, canto, cronos, dfk, dogechain, ethereum, fantom, harmony, metis, moonbeam, moonriver, optimism, polygon, klaytn]
-# chains = [polygon]
+# chains = [arbitrum]
 
 # Getting the balance of whats claimed in the multisig
 def get_balance(chain, contract_address, decimals, blocknumber="latest"):
@@ -60,7 +60,7 @@ def get_swap_fee_balance(chain, pool, index, blocknumber="latest"):
     # print(f"\n The token {token_symbol} at index {index} has \n amount: {amount} \n balance: {balance} \n \n ")
     return token_symbol, balance
 
-def get_cctp_balance(chain, blocknumber="latest"):
+def get_cctp_balance(chain, address, blocknumber="latest"):
     fees_function_selector = Web3.keccak(text='accumulatedFees(address,address)').hex()[0:10]
     amount = 0
     if chain.cctp:
@@ -69,7 +69,7 @@ def get_cctp_balance(chain, blocknumber="latest"):
             usdc_address = usdc_address[2:].zfill(64)
             protocol_fees = '0x0000000000000000000000000000000000000000'[2:].zfill(64)
             get_cctp_fees = fees_function_selector + protocol_fees + usdc_address
-            result = make_rpc_call(chain, chain.cctp, get_cctp_fees, blocknumber)
+            result = make_rpc_call(chain, address, get_cctp_fees, blocknumber)
             if not isinstance(result, str):
                 result = str(result)
             amount = int(result, 16) / 10**6
@@ -166,7 +166,7 @@ def get_token_balances_and_values(timestamp = None, month = "Current", specific_
                         break   
             # Find and add CCTP addresses
             for address in chain.cctp:
-                cctp_fees = get_cctp_balance(chain, block)
+                cctp_fees = get_cctp_balance(chain,address, block)
                 sums[chain.name]["CCTP Unclaimed Fees"] += cctp_fees
                 writer.writerow([chain.name,"USDC", cctp_fees, "CCTP Unclaimed Fees", address])
             

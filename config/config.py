@@ -125,6 +125,25 @@ base = Chain(
     cctp='0xfB2Bfc368a7edfD51aa2cbEC513ad50edEa74E84'
 )
 
+blast = Chain(
+    name= 'blast',
+    rpc_url=os.getenv('BLAST_RPC'),
+    bridge_address='0x55769baf6ec39b3bf4aae948eb890ea33307ef3c',
+    multisig='0x11EB5B6C45fB7E70aDf6a639E6C9CF58F0073aa9',
+    swap_addresses=[
+        '0xa4bd1AAD7cF04567c10f38FC4355E91bba32aC9c',
+        '0x999fcd13C54B26E02a6Ccd185f71550b3a4641c0',
+    ],
+    tokens=[
+        ("SYN", "0x9592f08387134e218327E6E8423400eb845EdE0E", 18),
+        ("NETH", "0xce971282faac9fabcf121944956da7142cccc855", 18),
+        ("WETH", "0x4300000000000000000000000000000000000004", 18),
+        ("USDB", "0x6B4712AE9797C199edd44F897cA09BC57628a1CF", 18),
+        ("nUSD", "0x3194B0A295D87fDAA54DF852c248F7a6BAF6c6e0", 6), 
+    ],
+    cctp=''
+)
+
 boba = Chain(
     name= 'boba',
     rpc_url=os.getenv('BOBA_RPC'),
