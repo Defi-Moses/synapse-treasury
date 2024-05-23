@@ -1,0 +1,10 @@
+Repository Management:
+- Ideally would merge with Synapse Treasury Frontend
+    - link the data so that one doesnt need to copy and paste
+- Historical Data needs to be updated with new contracts and newly supported chains
+    - Need to add monthly blocktimestamps for base, harmony, klaytn
+    - Run backfill_treasury_balances()
+- Could have something that updates daily  (would have to setup a server)
+
+
+
