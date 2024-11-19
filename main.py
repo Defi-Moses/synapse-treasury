@@ -107,7 +107,7 @@ def get_token_balances_and_values(timestamp = None, month = "Current", specific_
     # Initialize a dictionary to store the sums
     sums = {}
 
-    with open(f'treasuryHoldings_{month}_2023.csv', 'w', newline='') as file:
+    with open(f'treasuryHoldings_{month}_2024.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         # Write the headers
         writer.writerow(["Chain", "Token Symbol", "Value", "Type", "Contract Address"])
@@ -123,7 +123,11 @@ def get_token_balances_and_values(timestamp = None, month = "Current", specific_
             if month == "Current": 
                 block = "latest"
             else: 
-                block = times[chain.name][month-1]
+                try:
+                    block = times[chain.name][month-1]
+                except (KeyError, IndexError):
+                    print(f"Warning: Block data not found for {chain.name} at month {month}, skipping...")
+                    continue
 
 
             # 2. For each chain, iterate over the tokens supported by that chain
@@ -187,7 +191,7 @@ def get_token_balances_and_values(timestamp = None, month = "Current", specific_
             
 
     # Write the sums to a new CSV file
-    with open(f'treasurySums_{month}_2023.csv', 'w', newline='') as file:
+    with open(f'treasurySums_{month}_2024.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         # Write the headers
         writer.writerow(["Chain", "Claimed Fees", "Unclaimed Fees", "Swap Unclaimed Fees", "CCTP Unclaimed Fees"])
