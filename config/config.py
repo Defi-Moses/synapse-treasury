@@ -295,6 +295,7 @@ ethereum = Chain(
         ("FRAX", "0x853d955acef822db058eb8505911ed77f175b99e", 18),
         ("NUSD", "0x1B84765dE8B7566e4cEAF4D0fD3c5aF52D3DdE4F", 18),
         ("GOHM", "0x0ab87046fBb341D058F17CBC4c1133F25a20a52f", 18),
+        ("OHM", "0x64aa3364F17a4D01c6f1751Fd97C2BD3D7e7f1D5", 9),
         ("SYN", "0x0f2d719407fdbeff09d87557abb7232601fd9f29", 18),
         ("USDT", "0xdac17f958d2ee523a2206206994597c13d831ec7", 6),
         # ("SDT", "0x73968b9a57c6e53d41345fd57a6e6ae27d6cdb2f", 18),
